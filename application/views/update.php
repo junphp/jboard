@@ -1,6 +1,6 @@
 
-<form action='/index.php/jboard/update' method='post' class="form-group">
-  
+<form action='<?php echo $this->uri->segment(1);?>/updatepost/<?php echo $this->uri->segment(3);?>' method='post' class="form-group">
+
 <div class="form-group">
   <label for="inputTitle">Title</label>
   <input type="text" name="title" placeholder="Title" class="input-block-level form-control" />
@@ -14,6 +14,6 @@
 <script src="/static/lib/ckeditor/ckeditor.js"></script>
 <script>
   CKEDITOR.replace('description',{
-    'filebrowserUploadUrl':'/index.php/jboard/upload_receive_from_ck'
+    'filebrowserUploadUrl':'index.php/jboard/upload_receive_from_ck'
   });
 </script>
