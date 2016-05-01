@@ -1,8 +1,8 @@
-  <?php
+<?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 
-class Jboard extends CI_Controller {
+class Wall extends CI_Controller {
 
   function  __construct(){
     parent:: __construct();
@@ -18,11 +18,9 @@ class Jboard extends CI_Controller {
     $this->load->helper('cookie');
 
     $this->load->helper('url');
-
-    $this->load->library('form_validation');
-
     date_default_timezone_set('America/New_York');
     }
+
 
 
 	function index(){
@@ -37,39 +35,39 @@ class Jboard extends CI_Controller {
 
       $data['total']=$this->db->count_all($data['table_name']);
       //how many rows want to show per page
-      $data['per_page'] = 19;
+      $data['per_page'] = 10;
 
-
+      $table_name =$this->uri->segment(1);
       //$data['page_num']=$this->uri->segment(3,0);
 
-
+      $data['today']=date("m-d-Y");
       //pagination ------------------------------------------------->
 
-      $config['base_url'] = site_url().'/jboard/index';
+      $config['base_url'] = site_url().'/wall/index';
       $config['total_rows'] = $data['total'];
       $config['per_page'] = $data['per_page'];
-      $config['uri_segment']=3;
-      $config['num_links'] = 2;
+      //$config['uri_segment']=3;
+      $config['num_links'] = 5;
       $config['use_page_numbers']=TRUE;
-      //$config['page_query_string'] =TRUE;
+    //$config['page_query_string'] =TRUE;
 
       //Adding Enclosing Markup
       $config['full_tag_open'] = '<div><ul class="pagination">';
       $config['full_tag_close'] = '</ul></div><!--pagination-->';
 
-      $config['first_link'] = '&laquo; First';
+      $config['first_link'] = '&#60;&#60;';
       $config['first_tag_open'] = '<li class="prev page">';
       $config['first_tag_close'] = '</li>';
 
-      $config['last_link'] = 'Last &raquo;';
+      $config['last_link'] = '&#62;&#62;';
       $config['last_tag_open'] = '<li class="next page">';
       $config['last_tag_close'] = '</li>';
 
-      $config['next_link'] = 'Nex &rsaquo;';
+      $config['next_link'] = '&#62;';
       $config['next_tag_open'] = '<li class="next page">';
       $config['next_tag_close'] = '</li>';
 
-      $config['prev_link'] = '&lsaquo; Pre';
+      $config['prev_link'] = '&#60;';
       $config['prev_tag_open'] = '<li class="prev page">';
       $config['prev_tag_close'] = '</li>';
 
@@ -102,38 +100,130 @@ class Jboard extends CI_Controller {
       //view load -->application->view->board_list.php
       $this->load->view('board_list' ,$data,array('returnURL'=>$this->input->get('returnURL')));
 
+      $data['side_bar']=$test= $this->Jboard_model->wbest($data['table_name']);
+
+      $data['latest']=$this->Jboard_model->get_latest($data['table_name']);
+
+      //$vote_like=$like_vote=$this->input->post('like');
+      $data['popular']=$this->Jboard_model->get_popular($data['table_name']);
+
+      $this->load->view('list_side',$data);
+
       $this->_footer();
 
 	   }
 
 //individual page
-  public function get($id){
+   function get($id){
       $this->_head();
 
       $this->load->helper('text');
 
-      $table_name=$this->uri->segment(1,0);
+      $data['table_name']=$this->uri->segment(1,0);
 // page cpntants view----------------------------------------------------------->
-      $data['result'] = $this->db->get('jdmain');
+      $data['result'] = $this->db->get('wall');
 
       $data['page_num'] = $this->uri->segment(3,0);
 
-      $this->Jboard_model->updateview($data['page_num']);
+      $this->Jboard_model->updateview($data['table_name'],$data['page_num']);
 
-      $data['single_result'] = $this->Jboard_model->singledata($table_name,$data['page_num']);
+      $data['single_result'] = $this->Jboard_model->singledata($data['table_name'],$data['page_num']);
+
+
+//-------------------------------------------------------------------------------------------------------------------
+
+      $page_index=$this->input->get('page');
+
+      $data['page_index']=$this->input->get('page');
+
+      $data['total']=$this->db->count_all($data['table_name']);
+      //how many rows want to show per page
+      $data['per_page'] = 10;
+      $config['base_url'] = site_url().'/wall/index/';
+      $config['total_rows'] = $data['total'];
+      $config['per_page'] = $data['per_page'];
+      $config['uri_segment']=3;
+      $config['num_links'] = 5;
+      $config['use_page_numbers']=TRUE;
+
+      $config['full_tag_open'] = '<div><ul class="pagination">';
+      $config['full_tag_close'] = '</ul></div><!--pagination-->';
+
+      $config['first_link'] = '&#60;&#60;';
+      $config['first_tag_open'] = '<li class="prev page">';
+      $config['first_tag_close'] = '</li>';
+
+      $config['last_link'] = '&#62;&#62;';
+      $config['last_tag_open'] = '<li class="next page">';
+      $config['last_tag_close'] = '</li>';
+
+      $config['next_link'] = '&#62;';
+      $config['next_tag_open'] = '<li class="next page">';
+      $config['next_tag_close'] = '</li>';
+
+      $config['prev_link'] = '&#60;';
+      $config['prev_tag_open'] = '<li class="prev page">';
+      $config['prev_tag_close'] = '</li>';
+
+      $config['cur_tag_open'] = '<li class="active"><a href="#">';
+      $config['cur_tag_close'] = '</a></li>';
+
+      $config['num_tag_open'] = '<li class="page">';
+      $config['num_tag_close'] = '</li>';
+      //$config['page_limit']=10;
+      //$config['uri_segment'] = 3;
+      $config['anchor_class'] = 'follow_link';
+
+      if($page_index > 0){
+          $offset = ($page_index + 0)*$data['per_page']-$data['per_page'];
+      }else{
+        $offset = $page_index;
+      }
+
+      $this->pagination->initialize($config);
+
+      $data['result']=$this->Jboard_model->mydata($data['table_name'],$data['per_page'],$offset);
+
+      //$page = $this->input->get('page');
+      $data['pagination'] = $this->pagination->create_links($page_index);
+
+
+
+      //echo $pagenation_list  = $this->pagination($id, $table_name);
+      //var_dump($data['result']);
+
+//------------------------------------------------------------------------------------------------------------
 /*
 comment
 */
+
+    //table name call
+      $append= '_comment';
+      $search_table=$this->uri->segment(1,0);
+
+      $comment_table = $search_table.$append;
+
+//<---------------------------------------------------->
     //all comment view
-      $data['comment_result'] = $this->Jboard_model->comment_data($data['page_num']);
+      $data['comment_result'] = $this->Jboard_model->comment_data($comment_table,$data['page_num']);
     //total comment per page
-      $data['total_comment'] = $this->Jboard_model->total_comments($id);
+      $data['total_comment'] = $this->Jboard_model->total_comments($comment_table,$id);
     //current article call
-      $data['latest']=$this->Jboard_model->get_latest();
+      $data['latest']=$this->Jboard_model->get_latest($data['table_name']);
 
       //$vote_like=$like_vote=$this->input->post('like');
-      $data['popular']=$this->Jboard_model->get_popular();
+      $data['popular']=$this->Jboard_model->get_popular($data['table_name']);
 
+
+      $data['next']=$this->Jboard_model->nextbtn($id,$data['table_name']);
+
+      $data['pre']=$this->Jboard_model->prebtn($id,$data['table_name']);
+
+      $data['last']=$this->Jboard_model->last($data['table_name']);
+
+      $data['total']=$this->db->count_all($data['table_name']);
+
+      //$data['list_bottom']=$this->Jboard_model->list_bottom($data['table_name'],$data['per_page'],$pageoffset);
 
       //$query = $this->db->get_where('mytable', array('id' => $id),
 
@@ -143,20 +233,98 @@ comment
 
       //var_dump($data['total_like']);
       $this->load->view('get',$data);
-      //right side banner space
+      //var_dump($mimi);
       $this->load->view('main',$data);
+      //$data['list_bottom']=$this->Jboard_model->list_bottom();
+      //$this->pagination($do);
+      $this->load->view('board_list_bottom',$data);
+
+      //right side banner space
+
 
       //$this->view->
 
       //$this->index();
       $this->_footer();
 
+  }
+
+  function pagination($id){
+
+
+    $data['table_name']='wall';
+
+    $data['page_num'] = $id;
+
+    //$data['idx_page']=$this->input->get('per_page');
+
+    $data['total']=$this->db->count_all($data['table_name']);
+    //how many rows want to show per page
+    $data['per_page'] = 10;
+    $config['base_url'] = base_url().'/wall/index/';
+    $config['total_rows'] = $data['total'];
+    $config['per_page'] = $data['per_page'];
+    $config['uri_segment']=3;
+    $config['num_links'] = 5;
+    $config['use_page_numbers']=TRUE;
+  //$config['page_query_string'] =TRUE;
+
+    //Adding Enclosing Markup
+    $config['full_tag_open'] = '<div><ul class="pagination">';
+    $config['full_tag_close'] = '</ul></div><!--pagination-->';
+
+    $config['first_link'] = '&#60;&#60;';
+    $config['first_tag_open'] = '<li class="prev page">';
+    $config['first_tag_close'] = '</li>';
+
+    $config['last_link'] = '&#62;&#62;';
+    $config['last_tag_open'] = '<li class="next page">';
+    $config['last_tag_close'] = '</li>';
+
+    $config['next_link'] = '&#62;';
+    $config['next_tag_open'] = '<li class="next page">';
+    $config['next_tag_close'] = '</li>';
+
+    $config['prev_link'] = '&#60;';
+    $config['prev_tag_open'] = '<li class="prev page">';
+    $config['prev_tag_close'] = '</li>';
+
+    $config['cur_tag_open'] = '<li class="active"><a href="#">';
+    $config['cur_tag_close'] = '</a></li>';
+
+    $config['num_tag_open'] = '<li class="page">';
+    $config['num_tag_close'] = '</li>';
+    //$config['page_limit']=10;
+    //$config['uri_segment'] = 3;
+    $config['anchor_class'] = 'follow_link';
+
+
+    if($data['page_num'] > 0){
+        $offset = ($id + 0)*$data['per_page']-$data['per_page'];
+    }else{
+      $offset = $id;
+    }
+
+    $this->pagination->initialize($config);
+
+    $data['result']=$this->Jboard_model->mydata($data['table_name'],$data['per_page'],$offset);
+
+    //$data['page_link']=$this->pagination->create_links();
+
+
+    $this->load->view('board_list_bottom',$data);
+    //echo $pagenation_list  = $this->pagination($id, $table_name);*/
+    //var_dump($data['result']);
+
 
   }
 
 
+
 //method for new article when user write
   function add($table_name){
+
+    $table_name=$this->uri->segment(1);
     //log in need
 
     //if not log in pass it to login page redirect
@@ -185,7 +353,6 @@ comment
             $this->load->model('Jboard_model');
             $topic_id = $this->Jboard_model->add($table_name,$user_info);
             $this->load->helper('url');
-            //redirect('jboard/get/'.$topic_id);
             redirect($table_name.'/get/'.$topic_id);
           }
             $this->_footer();
@@ -195,6 +362,12 @@ comment
       function insert_comment($page_id){
         $this->load->helper('date');
 
+
+        //table name call
+          $append= '_comment';
+          $search_table=$this->uri->segment(1,0);
+
+          $comment_table = $search_table.$append;
 
         // session verify true for login in user
         /*if(!$this->session->userdata('is_login')){
@@ -222,9 +395,9 @@ comment
         $this->load->model('jboard_model');
 
         //$id=$this->input->post('id');
-        $this->Jboard_model->add_comment($comment_array);
+        $this->Jboard_model->add_comment($comment_table,$comment_array);
         //total comment count
-        $this->Jboard_model->update_comment($page_id);
+        $this->Jboard_model->update_comment($search_table,$page_id);
 
         //$this->load->helper('url');
         //redirect('jboard/get/'.$page_id);
@@ -277,21 +450,25 @@ comment
       }
     }*/
 
-    //midify article in indivisual page
+    //show modify view with data
     function update(){
 
+        $this->_head();
         $this->load->helper('text');
         //$data['result'] = $this->Jboard_model->mydata();
 
+        $data['table_name'] =$this->uri->segment(1);
+
         $data['page_num'] = $this->uri->segment(3,0);
 
-        $data['single_result'] = $this->Jboard_model->singledata($data['page_num']);
 
-        $this->_head();
+        $data['single_result'] = $this->Jboard_model->singledata($data['table_name'],$data['page_num']);
 
         $this->load->view('modify',$data);
 
-        $data['latest']=$this->Jboard_model->get_latest();
+        $data['latest']=$this->Jboard_model->get_latest($data['table_name']);
+
+        $data['popular']=$this->Jboard_model->get_popular($data['table_name']);
 
         //right side banner space
         $this->load->view('main',$data);
@@ -305,19 +482,20 @@ comment
 
             $this->_head();
 
-            $this->load->model('Jboard_model');
+            $board_name =$this->uri->segment(1);
 
-            $id = $this->input->post('id');
+            $id = $this->uri->segment(3,0);
 
-            $data=array(
+            $data = array(
+
                 'title'=>$this->input->post('title'),
                 'description'=>$this->input->post('description')
             );
 
-            $this->Jboard_model->updatedb($id,$data);
+            $this->Jboard_model->updatedb($board_name,$id,$data);
 
             $this->load->helper('url');
-            redirect('jboard/get/'.$id);
+            redirect($board_name.'/get/'.$id);
 
             $this->_footer();
       }
@@ -325,15 +503,17 @@ comment
 
       //remove article for indivisual page
         function delete(){
-          $this->load->model('jboard_model');
 
+          $this->_head();
           //call page id want to delete
           $data['id'] = $this->uri->segment(3,0);
 
-          $data['result']= $this->jboard_model->del_user_id($data['id']);
+          $data['table_name'] =$this->uri->segment(1);
 
-          $this->_head();
-          $this->load->view('dmessage',$data);
+          $this->Jboard_model->del_user_id($data['table_name'],$data['id']);
+
+          redirect($data['table_name']);
+
           $this->_footer();
         }
 
@@ -404,15 +584,12 @@ comment
 
     // file upload with editor ck
     function upload_receive_from_ck(){
-
-//<-------------------file upload config ---------------------------------->
-        $config['upload_path'] = './static/user';
-        $config['allowed_types'] = 'gif|jpg|png|jpeg';
-        $config['max_size'] = '2048';
-        $config['max_width'] = '5000';
-        $config['max_height'] = '5000';
+        $config['upload_path'] = './static/user/';
+        $config['allowed_types'] = 'gif|jpg|png';
+        $config['max_size'] = '4000';
+        $config['max_width'] = '4000';
+        $config['max_height'] = '4000';
         $config['remove_spaces'] = TRUE;
-//<---------------------end file upload config----------------------------->
 
         $this->load->library('upload', $config);
 
@@ -427,56 +604,16 @@ comment
 
             $data=$this->upload->data();
             $filename=$data['file_name'];
-            $test=$this->_create_thumbnail($filename);
-
 
             $url='/static/user/'.$filename;
 
             echo "<script type='text/javascript'>window.parent.CKEDITOR.tools.callFunction('".$CKEditorFuncNum."', '".$url."', 'Image upload success!')</script>";
-
-//var_dump($test);
             //$data = array('upload_data' => $this->upload->data());
-
 
             //$this->load->view('upload_success', $data);
             }
-
     }
 
-
-
-    function _create_thumbnail($filename){
-      $this->load->library('image_lib');
-
-      $config['image_library']    = "gd2";
-
-      $config['source_image'] = "./static/user/".$filename;
-
-      $config['new_image'] = "./static/thumb";
-
-      $config['create_thumb'] = TRUE;
-
-      $config['maintain_ratio'] = TRUE;
-
-      $config['width'] = "80";
-
-      $config['height'] = "80";
-      $this->image_lib->initialize($config);
-      $this->load->library('image_lib',$config);
-      if ( ! $this->image_lib->resize())
-              {
-                  echo $this->image_lib->display_errors('<p>','</p>');
-                }else{
-                  //$src = $config['new_image'];
-                  //$data['new_image'] = substr($src,2);
-                  //$data['img_src'] = base_url().$data['new_image'];
-
-                  $data=$this->image_lib->resize();
-
-                  return $data;
-                }
-
-            }
 
 
     //add like for article
@@ -494,11 +631,21 @@ comment
 
             $user_data=$this->session->userdata('id');
 
+            //table name call
+
+            $table = $this->uri->segment(1);
+
+            $tableAppend ='_vote';
+
+            $table_name = $table.$tableAppend;
+
+            //table name call end----------------------------->
+
             $user_info=array('user_id'=>$user_data,'board_id'=>$page_id);
 
-            $test=$this->Jboard_model->is_vote($user_data,$page_id);
+            $test=$this->Jboard_model->is_vote($table_name,$user_data,$page_id);
 
-                if($upOrDown =='like' && $test==FALSE){
+                if($upOrDown =='like' && $test == FALSE){
                     //$updateRecords = $this->Jboard_model->like_update_vote($page_id);
 
                     $status= -1;
@@ -506,8 +653,8 @@ comment
                     echo json_encode($status);
                     exit;
                 }else if($upOrDown =='like'){
-                    $updateRecords = $this->Jboard_model->dis_like_update_vote($page_id);
-                    $this->Jboard_model->exist_vote($user_info);
+                    $updateRecords = $this->Jboard_model->like_update_vote($table,$page_id);
+                    $this->Jboard_model->exist_vote($table_name,$user_info);
 
 
                 }else if($upOrDown =='dislike' && $test==FALSE){
@@ -517,8 +664,8 @@ comment
                     echo json_encode($status);
                     exit;
                 }else{
-                  $updateRecords = $this->Jboard_model->dis_like_update_vote($page_id);
-                  $this->Jboard_model->exist_vote($user_info);
+                  $updateRecords = $this->Jboard_model->dis_like_update_vote($table,$page_id);
+                  $this->Jboard_model->exist_vote($table_name,$user_info);
 
                 }
 
@@ -531,35 +678,17 @@ comment
         }
 
 }
-    /*function vote(){
 
-        $voteId = $this->input->post('voteId');
-        $upordown = $this->input0>post('upordown');
-
-        $status = 'FALSE';
-        $updaterecords = 0;
-
-        if($upordown=='upvote'){
-
-            $updaterecords = $this->Jboard_model->updateupvote($voteId);
-        }else{
-
-            $updaterecords = $this->Jboard_model->updatedownvote($voteId);
-        }
-
-        if($updaterecords > 0){
-            $status ="true";
-        }
-
-    }*/
 
           function write(){
               $this->_head();
 
-              $data['latest']=$this->Jboard_model->get_latest();
+              $data['table_name'] =$this->uri->segment(1);
+
+              $data['latest']=$this->Jboard_model->get_latest($data['table_name']);
 
 
-              $data['popular']=$this->Jboard_model->get_popular();
+              $data['popular']=$this->Jboard_model->get_popular($data['table_name']);
 
 
               $this->load->view('add');
@@ -569,79 +698,6 @@ comment
 
               $this->_footer();
           }
-
-
-          function send_mail(){
-
-            $this->load->library('email');
-
-            $this->form_validation->set_rules('name', 'name', 'required');
-            $this->form_validation->set_rules('email', 'email', 'required');
-            $this->form_validation->set_rules('subject', 'subject', 'trim|required|min_length[2]');
-            $this->form_validation->set_rules('message', 'message', 'trim|required|min_length[2]');
-            if ($this->form_validation->run() == FALSE) {
-              $result = 0;
-              echo json_encode(array(
-                'result'=>$result,
-                'name'=> form_error('name'),
-                'email'=> form_error('email'),
-                'subject'=> form_error('subject'),
-                'message'=> form_error('message'),
-              ));
-            } else {
-
-              //get the form data
-              $name = $this->input->post('name');
-              $from_email = $this->input->post('email');
-              $subject = $this->input->post('subject');
-              $message = $this->input->post('message');
-
-              //set to_email id to which you want to receive mails
-              $to_email = 'gom3572@gmail.com';
-
-
-              //configure email settings
-              $config['protocol'] = 'smtp';
-              $config['smtp_host'] = 'ssl://smtp.gmail.com';
-              $config['smtp_port'] = '465';
-              $config['smtp_user'] = 'gom3572@gmail.com'; // email id
-              $config['smtp_pass'] = 'sungho0980'; // email password
-              $config['mailtype'] = 'html';
-              $config['wordwrap'] = TRUE;
-              $config['charset'] = 'iso-8859-1';
-              $config['newline'] = "\r\n"; //use double quotes here
-              $this->email->initialize($config);
-              $this->load->library('email',$config);
-
-              //send mail
-              $this->email->from($from_email, $name);
-              $this->email->to($to_email);
-              $this->email->subject($subject);
-              $this->email->message($message);
-              if ($this->email->send())
-              {
-
-                  // mail sent\
-                  $result = 1;
-                  echo json_encode($result);
-                  //$this->session->set_flashdata('msg','<div class="alert alert-success text-center">Your mail has been sent successfully!</div>');
-                  //redirect('contactform/index');
-              }
-              else
-              {
-                  //error
-                  $result = 2;
-                  echo json_encode($result);
-                  echo 'error';
-                  //$this->session->set_flashdata('msg','<div class="alert alert-danger text-center">There is error in sending mail! Please try again later</div>');
-                  //redirect('contactform/index');
-              }
-          }
-        }
-
-
-
-
 
         //global header
           function _head(){
